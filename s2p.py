@@ -603,7 +603,10 @@ class s2p(object):
                     x, y, z = self._data_range(x, y, z, (a*1e9, b*1e9))
 
 
-                ax2.set_ylim(y.min()*1.05, y.max()*0.95)
+                a, b = ax2.get_ylim()
+                if y.min() > b or y.max() < b:
+                    ax2.set_ylim(y.min()*1.05, y.max()*0.95)
+
                 ax2.set_ylabel('Attenuation [dB]')
             else:
                 x, y, z = self.get_SParameters(s, data_format='ma')
@@ -611,7 +614,10 @@ class s2p(object):
                 if x[0]<a*1e9 and x[-1]>b*1e9:
                     x, y, z = self._data_range(x, y, z, (a*1e9, b*1e9))
 
-                ax2.set_ylim(y.min()*0.9, y.max()*1.1)
+                a, b = ax2.get_ylim()
+                if y.min() > b or y.max() < b:
+                    ax2.set_ylim(y.min()*0.9, y.max()*1.1)
+
                 ax2.set_ylabel('Attenuation')
 
 
