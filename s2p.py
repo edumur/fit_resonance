@@ -597,7 +597,6 @@ class s2p(object):
 
             # If db
             if ax6_button.circles[0].get_facecolor()[0] == 0.:
-                print 'db'
                 x, y, z = self.get_SParameters(s, data_format='db')
 
                 if x[0]<a*1e9 and x[-1]>b*1e9:
