@@ -23,6 +23,8 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 
+from matplotlib.widgets import CheckButtons, RadioButtons
+
 class s2p(object):
 
 
@@ -256,7 +258,7 @@ class s2p(object):
 
 
 
-    def get_SParameters(self, s='S21', asked_format='db'):
+    def get_SParameters(self, s='S21', data_format='db'):
         """
         Return desired S parameter from data.
 
@@ -264,7 +266,7 @@ class s2p(object):
         ----------
         s : str {'s11', 's12', 's21', 's22'}
             Set which parameter we want to get
-        asked_format : str {'ma', 'db', 'ri'}
+        data_format : str {'ma', 'db', 'ri'}
             Set in which format we get data
 
         Return
@@ -281,8 +283,8 @@ class s2p(object):
         if s not in ('s11', 's12', 's21', 's22'):
             raise ValueError('The argument "s" should be in the form : "S11", "S12", "S21", "S22"')
 
-        if asked_format.lower() not in ('ma', 'db', 'ri'):
-            raise ValueError('The argument "asked_format" should be in the form : "ma", "ri", "db"')
+        if data_format.lower() not in ('ma', 'db', 'ri'):
+            raise ValueError('The argument "data_format" should be in the form : "ma", "ri", "db"')
 
         #For concision we create short variable names
         d = self._data
@@ -290,37 +292,37 @@ class s2p(object):
         m = (self._measured.index(s) + 1)*2 # Magic operation to easily access data
 
         # Depending on the file format and the asked format we return data
-        if self._format == 'ma' and asked_format.lower() == 'db':
+        if self._format == 'ma' and data_format.lower() == 'db':
 
             return (d[0]*f,
                     self.ma2db(d[m-1]),
                     d[m])
 
-        elif self._format == 'db' and asked_format.lower() == 'ma':
+        elif self._format == 'db' and data_format.lower() == 'ma':
 
             return (d[0]*f,
                     self.db2ma(d[m-1]),
                     d[m])
 
-        elif self._format == 'db' and asked_format.lower() == 'ri':
+        elif self._format == 'db' and data_format.lower() == 'ri':
 
             return (d[0]*f,
                     np.cos(np.radians(d[m]))*self.db2ma(d[m-1]),
                     np.sin(np.radians(d[m]))*self.db2ma(d[m-1]))
 
-        elif self._format == 'ma' and asked_format.lower() == 'ri':
+        elif self._format == 'ma' and data_format.lower() == 'ri':
 
             return (d[0]*f,
                     np.cos(np.radians(d[m]))*d[m-1],
                     np.sin(np.radians(d[m]))*d[m-1])
 
-        elif self._format == 'ri' and asked_format.lower() == 'ma':
+        elif self._format == 'ri' and data_format.lower() == 'ma':
 
             return (d[0]*f,
                     np.sqrt(d[m-1]**2 + d[m]**2),
                     np.degrees(np.angle(d[m-1] + 1j*d[m])))
 
-        elif self._format == 'ri' and asked_format.lower() == 'db':
+        elif self._format == 'ri' and data_format.lower() == 'db':
 
             return (d[0]*f,
                     self.ma2db(np.sqrt(d[m-1]**2 + d[m]**2)),
@@ -527,5 +529,158 @@ class s2p(object):
         if grid:
             for ax in fig.get_axes():
                 ax.grid()
+
+        plt.show()
+
+
+
+    def plot_interactive_SParameter(self, s='s21'):
+
+        def zoom_func(event):
+
+            a, b = ax3.get_xlim()
+
+            x, y, z = self.get_SParameters(s, data_format='ri')
+
+            if x[0]<a*1e9 and x[-1]>b*1e9:
+                x, y, z = self._data_range(x, y, z, (a*1e9, b*1e9))
+                line_ri.set_data(y, z)
+
+
+                phase_func('a')
+                mag_func('a')
+
+                fig.canvas.draw()
+
+        def phase_func(label):
+
+            z = line_phase.get_ydata()
+
+            a, b = ax3.get_xlim()
+
+            x, y, z = self.get_SParameters(s, data_format='db')
+
+            if x[0]<a*1e9 and x[-1]>b*1e9:
+                x, y, z = self._data_range(x, y, z, (a*1e9, b*1e9))
+
+            # If deg
+            if ax5_button.circles[0].get_facecolor()[0] == 0.:
+                # If unwrap
+                if ax4_button.circles[1].get_facecolor()[0] == 0.:
+                    z = np.rad2deg(np.unwrap(np.deg2rad(z)))
+                    ax3.set_ylabel('Phase (unwrap) [deg]')
+                else:
+                    ax3.set_ylabel('Phase [deg]')
+            else:
+                # If unwrap
+                if ax4_button.circles[1].get_facecolor()[0] == 0.:
+                    z = np.unwrap(np.deg2rad(z))
+                    ax3.set_ylabel('Phase (unwrap) [rad]')
+                else:
+                    z = np.deg2rad(z)
+                    ax3.set_ylabel('Phase [rad]')
+
+
+            f_data, f_unit = self._parse_number(x)
+            line_phase.set_data(f_data, z)
+
+            ax3.relim()
+            ax3.autoscale_view()
+
+            fig.canvas.draw()
+
+        def mag_func(label):
+
+            z = line_phase.get_ydata()
+
+            a, b = ax3.get_xlim()
+
+            # If db
+            if ax6_button.circles[0].get_facecolor()[0] == 0.:
+                print 'db'
+                x, y, z = self.get_SParameters(s, data_format='db')
+
+                if x[0]<a*1e9 and x[-1]>b*1e9:
+                    x, y, z = self._data_range(x, y, z, (a*1e9, b*1e9))
+
+
+                ax2.set_ylim(y.min()*1.05, y.max()*0.95)
+                ax2.set_ylabel('Attenuation [dB]')
+            else:
+                x, y, z = self.get_SParameters(s, data_format='ma')
+
+                if x[0]<a*1e9 and x[-1]>b*1e9:
+                    x, y, z = self._data_range(x, y, z, (a*1e9, b*1e9))
+
+                ax2.set_ylim(y.min()*0.9, y.max()*1.1)
+                ax2.set_ylabel('Attenuation')
+
+
+            f_data, f_unit = self._parse_number(x)
+            line_ma.set_data(f_data, y)
+
+
+            ax2.autoscale_view()
+
+            fig.canvas.draw()
+
+
+        fig = plt.figure()
+        fig.suptitle(s.upper())
+
+        ax1 = plt.subplot2grid((3, 4), (0, 0), colspan=2, rowspan=2)
+        ax2 = plt.subplot2grid((3, 4), (0, 2), colspan=2)
+        ax3 = plt.subplot2grid((3, 4), (1, 2), colspan=2, sharex=ax2)
+        ax4 = plt.subplot2grid((3, 4), (2, 0))
+        ax5 = plt.subplot2grid((3, 4), (2, 1))
+        ax6 = plt.subplot2grid((3, 4), (2, 2))
+
+
+
+        ax4.set_title('Phase wrapping')
+        ax4_button = RadioButtons(ax=ax4,
+                                  labels=('wrap', 'unwrap'),
+                                  active=0)
+
+        ax5.set_title('Phase unit')
+        ax5_button = RadioButtons(ax=ax5,
+                                  labels=('deg', 'rad'),
+                                  active=0)
+
+        ax6.set_title('Magnitude unit')
+        ax6_button = RadioButtons(ax=ax6,
+                                  labels=('dB', 'mag'),
+                                  active=0)
+
+
+        x, y, z = self.get_SParameters(s, data_format='ri')
+        line_ri, = ax1.plot(y, z)
+
+        # We draw axes lines
+        ax1.axhline(color='black')
+        ax1.axvline(color='black')
+
+        x, y, z = self.get_SParameters(s, data_format='db')
+        f_data, f_unit = self._parse_number(x)
+
+        line_ma,   = ax2.plot(f_data, y)
+        line_phase, = ax3.plot(f_data, z)
+
+        ax2.set_xticklabels('')
+
+        ax1.set_xlabel('Real part')
+        ax1.set_ylabel('Imaginary part')
+        ax2.set_ylabel('Attenuation [dB]')
+        ax3.set_ylabel('Phase [deg]')
+        ax3.set_xlabel('Frequency '+f_unit+'Hz')
+
+
+        fig.canvas.mpl_connect('button_release_event', zoom_func)
+        ax4_button.on_clicked(phase_func)
+        ax5_button.on_clicked(phase_func)
+        ax6_button.on_clicked(mag_func)
+
+
+        # fig.tight_layout()
 
         plt.show()
