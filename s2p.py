@@ -666,7 +666,7 @@ class s2p(object):
         line_ma,   = ax2.plot(f_data, y)
         line_phase, = ax3.plot(f_data, z)
 
-        ax2.set_xticklabels('')
+        plt.setp(ax2.get_xticklabels(), visible=False)
 
         ax1.set_xlabel('Real part')
         ax1.set_ylabel('Imaginary part')
