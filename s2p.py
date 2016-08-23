@@ -41,7 +41,7 @@ class s2p(tools):
         self._full_name = full_name
 
         self._frequency_unit = None
-        self._format   = None
+        self._unit_mag   = None
         self._data     = None
         self._R        = None
 
@@ -138,7 +138,7 @@ class s2p(tools):
 
         self._frequency_unit = last_line[0]
         self._parameter      = last_line[1]
-        self._format         = last_line[2]
+        self._unit_mag         = last_line[2]
         self._R              = float(last_line[4])
 
 
@@ -154,13 +154,13 @@ class s2p(tools):
             Data format
         """
 
-        if self._format == 'db' :
+        if self._unit_mag == 'db' :
             return 'Decibel-Angle'
 
-        elif self._format == 'ma' :
+        elif self._unit_mag == 'ma' :
             return 'Magnitude-Angle'
 
-        elif self._format == 'ri' :
+        elif self._unit_mag == 'ri' :
             return 'Real-Imaginary'
         else:
             raise ValueError('Impossible to find what is the format of the s2p file (not "DB" "MA" or "RI")')
@@ -191,6 +191,11 @@ class s2p(tools):
         self._data = pd.read_csv(self._full_name,
                            delimiter=' ',
                            skiprows=self._skiprows-1).get_values().transpose()
+
+        if max(self._data[4]) > 4:
+            self._unit_phase = 'deg'
+        else:
+            self._unit_phase = 'rad'
 
 
 
@@ -228,37 +233,37 @@ class s2p(tools):
         m = (self._measured.index(s) + 1)*2 # Magic operation to easily access data
 
         # Depending on the file format and the asked format we return data
-        if self._format == 'ma' and data_format.lower() == 'db':
+        if self._unit_mag == 'ma' and data_format.lower() == 'db':
 
             return (d[0]*f,
                     self.ma2db(d[m-1]),
                     d[m])
 
-        elif self._format == 'db' and data_format.lower() == 'ma':
+        elif self._unit_mag == 'db' and data_format.lower() == 'ma':
 
             return (d[0]*f,
                     self.db2ma(d[m-1]),
                     d[m])
 
-        elif self._format == 'db' and data_format.lower() == 'ri':
+        elif self._unit_mag == 'db' and data_format.lower() == 'ri':
 
             return (d[0]*f,
                     np.cos(np.radians(d[m]))*self.db2ma(d[m-1]),
                     np.sin(np.radians(d[m]))*self.db2ma(d[m-1]))
 
-        elif self._format == 'ma' and data_format.lower() == 'ri':
+        elif self._unit_mag == 'ma' and data_format.lower() == 'ri':
 
             return (d[0]*f,
                     np.cos(np.radians(d[m]))*d[m-1],
                     np.sin(np.radians(d[m]))*d[m-1])
 
-        elif self._format == 'ri' and data_format.lower() == 'ma':
+        elif self._unit_mag == 'ri' and data_format.lower() == 'ma':
 
             return (d[0]*f,
                     np.sqrt(d[m-1]**2 + d[m]**2),
                     np.degrees(np.angle(d[m-1] + 1j*d[m])))
 
-        elif self._format == 'ri' and data_format.lower() == 'db':
+        elif self._unit_mag == 'ri' and data_format.lower() == 'db':
 
             return (d[0]*f,
                     self.ma2db(np.sqrt(d[m-1]**2 + d[m]**2)),
