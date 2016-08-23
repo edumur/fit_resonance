@@ -25,7 +25,9 @@ import matplotlib.pyplot as plt
 
 from matplotlib.widgets import CheckButtons, RadioButtons
 
-class s2p(object):
+from tools import tools
+
+class s2p(tools):
 
 
 
@@ -84,6 +86,13 @@ class s2p(object):
         return self._full_name.split('/')[-1].split('.')[0]
 
 
+    def get_frequency_unit(self):
+        """
+        Return the unit of frequency
+        """
+
+        return self._frequency_unit
+
 
 
     def get_number_point(self):
@@ -134,58 +143,6 @@ class s2p(object):
         self._parameter      = last_line[1]
         self._format         = last_line[2]
         self._R              = float(last_line[4])
-
-
-
-    def get_frequency_unit(self, style='String'):
-        """
-        Give the factor of the frequency and set the attribut factor
-
-        Parameters
-        ----------
-        style : str {'string', 'float'}
-            Determined the style of the output
-
-        Return
-        ----------
-        factor : float
-            factor of the frequency
-                1.  for  Hz
-                1e3 for KHz
-                1e6 for MHz
-                1e9 for GHz
-               : str
-                     Hertz
-                Kilo Hertz
-                Mega Hertz
-                Giga Hertz
-        """
-
-        answer = ''
-        factor = 0
-
-        if self._frequency_unit == 'ghz' :
-            answer = 'Giga Hertz'
-            factor = 1e9
-
-        elif self._frequency_unit == 'mhz' :
-            answer = 'Mega Hertz'
-            factor = 1e6
-
-        elif self._frequency_unit == 'khz' :
-            answer = 'Kilo Hertz'
-            factor = 1e3
-
-        else :
-            answer = 'Hertz'
-            factor = 1.
-
-        if style.lower() == 'string':
-            return answer
-        elif style.lower() == 'float':
-            return factor
-        else :
-            raise ValueError('The style input should be "String" or "Float"')
 
 
 
@@ -240,24 +197,6 @@ class s2p(object):
 
 
 
-    def db2ma(self, x):
-        """
-            Transform dB in magnitude
-        """
-
-        return 10.**(x/20.)
-
-
-
-    def ma2db(self, x):
-        """
-            Transform magnitude in dB
-        """
-
-        return 20.*np.log10(x)
-
-
-
     def get_SParameters(self, s='S21', data_format='db'):
         """
         Return desired S parameter from data.
@@ -288,7 +227,7 @@ class s2p(object):
 
         #For concision we create short variable names
         d = self._data
-        f = self.get_frequency_unit('float')
+        f = self.frequency_factor(self._frequency_unit)
         m = (self._measured.index(s) + 1)*2 # Magic operation to easily access data
 
         # Depending on the file format and the asked format we return data
@@ -332,30 +271,6 @@ class s2p(object):
             return (d[0]*f,
                     d[m-1],
                     d[m])
-
-
-
-    def _parse_number(self, x):
-
-        power_ten = int(np.log10(abs(x[-1])))/3*3
-
-        prefix = {-24 : 'y',
-                  -21 : 'z',
-                  -18 : 'a',
-                  -15 : 'p',
-                  -12 : 'p',
-                   -9 : 'n',
-                   -6 : 'µ',
-                   -3 : 'm',
-                    0 : '',
-                    3 : 'k',
-                    6 : 'M',
-                    9 : 'G',
-                   12 : 'T',
-                   15 : 'p',
-                   18 : 'E'}
-
-        return x/10.**power_ten, prefix[power_ten]
 
 
 
