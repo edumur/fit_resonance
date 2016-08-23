@@ -131,12 +131,23 @@ class plot(object):
             # We format the phase
             if phase_unit == 'rad':
                 if unwrap_phase:
-                    z = np.unwrap(np.deg2rad(z))
+                    if self.data._unit_phase == 'deg':
+                        z = np.unwrap(np.deg2rad(z))
+                    else:
+                        z = np.unwrap(z)
                 else:
-                    z = np.deg2rad(z)
+                    if self.data._unit_phase == 'deg':
+                        z = np.deg2rad(z)
             if phase_unit == 'deg':
                 if unwrap_phase:
-                    z = np.rad2deg(np.unwrap(np.deg2rad(z)))
+                    if self.data._unit_phase == 'deg':
+                        z = np.rad2deg(np.unwrap(np.deg2rad(z)))
+                    else:
+                        z = np.rad2deg(np.unwrap(z))
+                else:
+                    if self.data._unit_phase == 'rad':
+                        z = np.rad2deg(z)
+
 
             ax1.plot(f_data, y)
             ax2.plot(f_data, z)
@@ -244,9 +255,9 @@ class plot(object):
         def zoom_func(event):
 
             a, b = ax3.get_xlim()
-            print a, b
+
             x, y, z = self.data.get_SParameters(s, data_format='ri')
-            print x[0], a*freq_factor
+
             if x[0]<a*freq_factor and x[-1]>b*freq_factor:
                 x, y, z = self._data_range(x, y, z, (a*freq_factor, b*freq_factor))
                 line_ri.set_data(y, z)
@@ -264,6 +275,8 @@ class plot(object):
             a, b = ax3.get_xlim()
 
             x, y, z = self.data.get_SParameters(s, data_format='db')
+            if self.data._unit_phase == 'rad':
+                z = np.rad2deg(z)
 
             if x[0]<a*freq_factor and x[-1]>b*freq_factor:
                 x, y, z = self._data_range(x, y, z, (a*freq_factor, b*freq_factor))
@@ -372,6 +385,8 @@ class plot(object):
 
         x, y, z = self.data.get_SParameters(s, data_format='db')
         f_data, f_unit = self._parse_number(x)
+        if self.data._unit_phase == 'rad':
+            z = np.rad2deg(z)
 
         line_ma,   = ax2.plot(f_data, y)
         line_phase, = ax3.plot(f_data, z)
