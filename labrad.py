@@ -21,10 +21,8 @@
 
 import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
 from ConfigParser import SafeConfigParser
 
-from matplotlib.widgets import CheckButtons, RadioButtons
 
 from tools import tools
 
@@ -109,7 +107,8 @@ class labrad(tools):
                     elif option == 'category':
                         self._measured.append(s.get(section, option).lower())
 
-        self._format = self._units[0]
+        self._unit_mag = self._units[0]
+        self._unit_phase = self._units[-1]
 
 
 
@@ -153,40 +152,55 @@ class labrad(tools):
         #For concision we create short variable names
         d = self._data
         f = self.frequency_factor(self._frequency_unit)
-        m = self._measured.index(s) # Return position of the magnitude data
+        m = self._measured.index(s) + 1 # Return position of the magnitude data
 
         # Depending on the file format and the asked format we return data
-        if self._format == 'ma' and data_format.lower() == 'db':
+        if self._unit_mag == 'ma' and data_format.lower() == 'db':
 
             return (d[0]*f,
                     self.ma2db(d[m]),
                     d[m+4])
 
-        elif self._format == 'db' and data_format.lower() == 'ma':
+        elif self._unit_mag == 'db' and data_format.lower() == 'ma':
 
             return (d[0]*f,
                     self.db2ma(d[m]),
                     d[m+4])
 
-        elif self._format == 'db' and data_format.lower() == 'ri':
+        elif self._unit_mag == 'db' and data_format.lower() == 'ri':
 
-            return (d[0]*f,
-                    np.cos(np.radians(d[m+4]))*self.db2ma(d[m]),
-                    np.sin(np.radians(d[m+4]))*self.db2ma(d[m]))
+            if self._unit_phase == 'rad':
 
-        elif self._format == 'ma' and data_format.lower() == 'ri':
+                return (d[0]*f,
+                        np.cos(d[m+4])*self.db2ma(d[m]),
+                        np.sin(d[m+4])*self.db2ma(d[m]))
+            else:
 
-            return (d[0]*f,
-                    np.cos(np.radians(d[m+4]))*d[m],
-                    np.sin(np.radians(d[m+4]))*d[m])
+                return (d[0]*f,
+                        np.cos(np.radians(d[m+4]))*self.db2ma(d[m]),
+                        np.sin(np.radians(d[m+4]))*self.db2ma(d[m]))
 
-        elif self._format == 'ri' and data_format.lower() == 'ma':
+        elif self._unit_mag == 'ma' and data_format.lower() == 'ri':
+
+            if self._unit_phase == 'rad':
+
+                return (d[0]*f,
+                        np.cos(d[m+4])*d[m],
+                        np.sin(d[m+4])*d[m])
+
+            else:
+
+                return (d[0]*f,
+                        np.cos(np.radians(d[m+4]))*d[m],
+                        np.sin(np.radians(d[m+4]))*d[m])
+
+        elif self._unit_mag == 'ri' and data_format.lower() == 'ma':
 
             return (d[0]*f,
                     np.sqrt(d[m]**2 + d[m+4]**2),
                     np.degrees(np.angle(d[m] + 1j*d[m+4])))
 
-        elif self._format == 'ri' and data_format.lower() == 'db':
+        elif self._unit_mag == 'ri' and data_format.lower() == 'db':
 
             return (d[0]*f,
                     self.ma2db(np.sqrt(d[m]**2 + d[m+4]**2)),
@@ -196,7 +210,3 @@ class labrad(tools):
             return (d[0]*f,
                     d[m],
                     d[m+4])
-
-
-a = labrad('00001 - Sapphire sample.csv')
-print a.get_SParameters()
