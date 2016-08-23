@@ -89,7 +89,7 @@ class labrad(tools):
 
         s.read(self._full_name[:-3]+'ini')
 
-        self._frequency_unit = s.get('Independent 1', 'units')
+        self._frequency_unit = s.get('Independent 1', 'units').lower()
 
         self._parameters = {'s11', 's12', 's21', 's22'}
         self._units = []
