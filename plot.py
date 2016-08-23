@@ -239,14 +239,16 @@ class plot(object):
 
     def plot_interactive_SParameter(self, s='s21'):
 
+        freq_factor = self.data.frequency_factor(self.data._frequency_unit)
+
         def zoom_func(event):
 
             a, b = ax3.get_xlim()
-
+            print a, b
             x, y, z = self.data.get_SParameters(s, data_format='ri')
-
-            if x[0]<a*1e9 and x[-1]>b*1e9:
-                x, y, z = self._data_range(x, y, z, (a*1e9, b*1e9))
+            print x[0], a*freq_factor
+            if x[0]<a*freq_factor and x[-1]>b*freq_factor:
+                x, y, z = self._data_range(x, y, z, (a*freq_factor, b*freq_factor))
                 line_ri.set_data(y, z)
 
 
@@ -263,8 +265,8 @@ class plot(object):
 
             x, y, z = self.data.get_SParameters(s, data_format='db')
 
-            if x[0]<a*1e9 and x[-1]>b*1e9:
-                x, y, z = self._data_range(x, y, z, (a*1e9, b*1e9))
+            if x[0]<a*freq_factor and x[-1]>b*freq_factor:
+                x, y, z = self._data_range(x, y, z, (a*freq_factor, b*freq_factor))
 
             # If deg
             if ax5_button.circles[0].get_facecolor()[0] == 0.:
@@ -302,8 +304,8 @@ class plot(object):
             if ax6_button.circles[0].get_facecolor()[0] == 0.:
                 x, y, z = self.data.get_SParameters(s, data_format='db')
 
-                if x[0]<a*1e9 and x[-1]>b*1e9:
-                    x, y, z = self._data_range(x, y, z, (a*1e9, b*1e9))
+                if x[0]<a*freq_factor and x[-1]>b*freq_factor:
+                    x, y, z = self._data_range(x, y, z, (a*freq_factor, b*freq_factor))
 
 
                 a, b = ax2.get_ylim()
@@ -314,8 +316,8 @@ class plot(object):
             else:
                 x, y, z = self.data.get_SParameters(s, data_format='ma')
 
-                if x[0]<a*1e9 and x[-1]>b*1e9:
-                    x, y, z = self._data_range(x, y, z, (a*1e9, b*1e9))
+                if x[0]<a*freq_factor and x[-1]>b*freq_factor:
+                    x, y, z = self._data_range(x, y, z, (a*freq_factor, b*freq_factor))
 
                 a, b = ax2.get_ylim()
                 if y.min() > b or y.max() < b:
