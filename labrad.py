@@ -21,7 +21,8 @@
 
 import numpy as np
 import pandas as pd
-from ConfigParser import SafeConfigParser
+import os
+from ConfigParser import ConfigParser, SafeConfigParser
 
 
 from tools import tools
@@ -85,9 +86,9 @@ class labrad(tools):
         Extract parameters from the s2p file and order them in the class
         """
 
-        s = SafeConfigParser()
+        s = ConfigParser()
 
-        s.read(self._full_name[:-3]+'ini')
+        s.read(os.path.join(os.getcwd(), self._full_name[:-3]+'ini'))
 
         self._frequency_unit = s.get('Independent 1', 'units').lower()
 
