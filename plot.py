@@ -36,7 +36,7 @@ class plot(object):
         elif full_name[-3:] == 'csv':
             self.data = labrad(full_name)
         else:
-            raise ValueError('File format unknown: '+full_name[:-3])
+            raise ValueError('File format unknown: '+full_name[-3:])
 
 
 
