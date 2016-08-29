@@ -357,6 +357,8 @@ class plot(object):
         ax6 = plt.subplot2grid((3, 4), (2, 2))
 
 
+        ax3.ticklabel_format(useOffset=False)
+
 
         ax4.set_title('Phase wrapping')
         ax4_button = RadioButtons(ax=ax4,
