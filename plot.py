@@ -248,7 +248,7 @@ class plot(object):
 
 
 
-    def plot_interactive_SParameter(self, s='s21'):
+    def plot_interactive_SParameter(self, s='s21', linestyle='-'):
 
         def zoom_func(event):
 
@@ -377,7 +377,7 @@ class plot(object):
 
 
         x, y, z = self.data.get_SParameters(s, data_format='ri')
-        line_ri, = ax1.plot(y, z)
+        line_ri, = ax1.plot(y, z, ls=linestyle)
 
         # We draw axes lines
         ax1.axhline(color='black')
@@ -388,8 +388,8 @@ class plot(object):
         if self.data._unit_phase == 'rad':
             z = np.rad2deg(z)
 
-        line_ma,   = ax2.plot(f_data, y)
-        line_phase, = ax3.plot(f_data, z)
+        line_ma,   = ax2.plot(f_data, y, ls=linestyle)
+        line_phase, = ax3.plot(f_data, z, ls=linestyle)
 
         plt.setp(ax2.get_xticklabels(), visible=False)
 
