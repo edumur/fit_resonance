@@ -23,10 +23,11 @@ from matplotlib.widgets import CheckButtons, RadioButtons
 
 from s2p import s2p
 from labrad import labrad
+from tools import tools
 
 
 
-class plot(object):
+class plot(tools):
 
 
     def __init__(self, full_name):
@@ -53,30 +54,6 @@ class plot(object):
         b = abs(x - data_range[1]).argmin()
 
         return x[a:b], y[a:b], z[a:b]
-
-
-
-    def _parse_number(self, x):
-
-        power_ten = int(np.log10(abs(x[-1])))/3*3
-
-        prefix = {-24 : 'y',
-                  -21 : 'z',
-                  -18 : 'a',
-                  -15 : 'p',
-                  -12 : 'p',
-                   -9 : 'n',
-                   -6 : 'µ',
-                   -3 : 'm',
-                    0 : '',
-                    3 : 'k',
-                    6 : 'M',
-                    9 : 'G',
-                   12 : 'T',
-                   15 : 'p',
-                   18 : 'E'}
-
-        return x/10.**power_ten, prefix[power_ten]
 
 
 
