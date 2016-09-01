@@ -17,6 +17,7 @@
 # with this program; if not, write to the Free Software Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
+import numpy as np
 
 
 class tools(object):
@@ -72,3 +73,27 @@ class tools(object):
             return 1e3
         else :
             return 1.
+
+
+
+    def _parse_number(self, x):
+
+        power_ten = int(np.log10(abs(x[-1])))/3*3
+
+        prefix = {-24 : 'y',
+                  -21 : 'z',
+                  -18 : 'a',
+                  -15 : 'p',
+                  -12 : 'p',
+                   -9 : 'n',
+                   -6 : 'µ',
+                   -3 : 'm',
+                    0 : '',
+                    3 : 'k',
+                    6 : 'M',
+                    9 : 'G',
+                   12 : 'T',
+                   15 : 'p',
+                   18 : 'E'}
+
+        return x/10.**power_ten, prefix[power_ten]
