@@ -22,6 +22,8 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.optimize import leastsq, minimize
+import lmfit
+from scipy.stats import pearsonr
 
 from plot import plot
 
@@ -29,17 +31,11 @@ class fit(plot):
 
 
 
-    def __init__(self):
+    def __init__(self, x=None, y=None, z=None):
 
-        # Fit parameters are saved as class attributes
-        self.qi               = None
-        self.qc               = None
-        self.f0               = None
-        self.phi              = None
-        self.background_db    = None
-        self.background_phase = None
-        self.phase_delay      = None
-
+        self.x = x
+        self.y = y
+        self.z = z
 
 
     @property
@@ -50,8 +46,9 @@ class fit(plot):
     @frequency_range.setter
     def frequency_range(self, (a, b)):
 
-        self.z = self.z[self.x<b]
-        self.z = self.z[self.x[self.x<b]>a]
+        if self.z is not None:
+            self.z = self.z[self.x<b]
+            self.z = self.z[self.x[self.x<b]>a]
 
         self.y = self.y[self.x<b]
         self.y = self.y[self.x[self.x<b]>a]
@@ -63,7 +60,7 @@ class fit(plot):
 ################################################################################
 #
 #
-#                   Phase shift and electronic delay
+#                   Model
 #
 #
 ################################################################################
@@ -72,81 +69,24 @@ class fit(plot):
 
     def model_phase_shift_electronic_delay(self, p, x):
 
-        a, b = p
+        p = p.valuesdict()
+        a = p['electronic_delay']
+        b = p['phase_shift']
 
-        return np.angle(np.exp(-1j*2.*np.pi*(a*x + b)))
-
-
-
-    def fit_phase_shift_electronic_delay(self, p, x, y):
-
-        def func(p, x, y):
-
-            return self.model_phase_shift_electronic_delay(p, x) - y
-
-
-        return leastsq(func, p, args=(x, y))[0]
+        return np.unwrap(np.angle(np.exp(-1j*(2.*np.pi*(a*x) + b))))
 
 
 
-    def print_phase_shift_electronic_delay(self, p):
+    def model_s21(self, p, x, style='db', phase='rad'):
 
-        a, b = p
+        p = p.valuesdict()
+        qi = p['qi']
+        qc = p['qc']
+        f0 = p['f0']
+        phi = p['phi']
 
-        result  = 'Results:\n'\
-                  '    Electronic delay: '+str(a*1e9)+' ns\n'\
-                  '    Phase shift: '+str(b)+' rad or '+str(np.rad2deg(b))+' deg'
-
-        return result
-
-
-
-    def plot_phase_shift_electronic_delay(self, p, x, y, grid=True):
-
-        x_data = np.linspace(x[0], x[-1], 1e4)
-        y_model = self.model_phase_shift_electronic_delay(p, x_data)
-
-        fig, ax = plt.subplots(1, 1)
-
-        # Obtain the frequency data in a good format (usually GHz)
-        f_data, f_unit = self._parse_number(x)
-
-        ax.plot(f_data, y, '.', label='data')
-        ax.plot(x_data/1e9, y_model, '--', label='model')
-
-        ax.set_xlabel('Frequency '+f_unit+'Hz')
-        ax.set_ylabel('Phase [rad]')
-
-        # Display grid or not
-        if grid:
-            ax.grid()
-
-        fig.suptitle('Phase shift and electronic delay')
-        plt.show()
-
-
-
-################################################################################
-#
-#
-#                    S21
-#
-#
-################################################################################
-
-
-
-    def model(self, p, x, style='db', phase='rad'):
-
-        qi, qc, f0, phi, background_db, background_phase, phase_delay = p
-
-        # Calculate S21
         dx = (x - f0)/f0
         y = 1./(1. + qi/qc*np.exp(1j*phi)/(1. + 2j*qi*dx))
-
-        # Adding the background in db, the background phase and phase delay
-        y = y*10.**(background_db/20.)\
-            *np.exp(-1j*(2.*np.pi*x*phase_delay - background_phase))
 
         if style.lower() == 'db':
 
@@ -183,143 +123,208 @@ class fit(plot):
 
 
 
-    def fit_db_phase(self, p, x, y, z):
-
-        def func(p, x, y, z):
-
-            y_model, z_model = self.model(p, x, style='db')
-
-            y_error = y - y_model
-            z_error = z - z_model
-
-            # return np.sum(np.concatenate((y_error, z_error))**2.)
-            return np.concatenate((y_error, z_error))
-
-        # return minimize(func, p, args=(self.x, self.y, self.z),
-        #                 method='L-BFGS-B',
-        #                 bounds=((0., None),
-        #                         (0., None),
-        #                         (0., None),
-        #                         (None, None),
-        #                         (None, None),
-        #                         (None, None),
-        #                         (None, None))).x
-        p, cov_p, infodict, mesg, ier = leastsq(func, p, args=(x, y, z), full_output=True)
-
-        p_err = [np.nan]*len(p)
-        if cov_p is not None:
-            dof = len(x) - len(p)
-            chi_sq = np.sum(func(p, x, y, z)**2.)
-
-            for i in range(len(p)):
-                p_err[i] = np.sqrt(cov_p[i][i]) * np.sqrt(chi_sq / dof)
-
-        return p, p_err
+################################################################################
+#
+#
+#                   Residual
+#
+#
+################################################################################
 
 
 
-    def fit_inverse_circle(self, p, x, y, z):
+    def residual_phase_shift_electronic_delay(self, p, weight=None):
 
-        def func(p, x, y, z):
+        if weight is None:
+            weight = np.ones_like(self.x)
 
-            y_model, z_model = self.model(p, x, style='inverse')
+        residual = self.model_phase_shift_electronic_delay(p, self.x) - self.y
 
-            y_error = y - y_model
-            z_error = z - z_model
-
-            # return np.sum(np.concatenate((y_error, z_error))**2.)
-            return np.concatenate((y_error, z_error))
-
-        # return minimize(func, p, args=(self.x, self.y, self.z),
-        #                 method='L-BFGS-B',
-        #                 bounds=((0., None),
-        #                         (0., None),
-        #                         (0., None),
-        #                         (None, None),
-        #                         (None, None),
-        #                         (None, None),
-        #                         (None, None))).x
-        p, cov_p, infodict, mesg, ier = leastsq(func, p, args=(x, y, z), full_output=True)
-
-        p_err = [np.nan]*len(p)
-        if cov_p is not None:
-            dof = len(x) - len(p)
-            chi_sq = np.sum(func(p, x, y, z)**2.)
-
-            for i in range(len(p)):
-                p_err[i] = np.sqrt(cov_p[i][i]) * np.sqrt(chi_sq / dof)
-
-        return p, p_err
+        return  residual/weight
 
 
 
-    def print_s21(self, p, p_err=None):
+    def residual_inverse_circle(self, p, weight=None):
 
-        result  = 'Results:\n'
-        result += '    Qi: {0:.2E} +- {1:.2E}\n'.format(p[0], p_err[0])
-        result += '    Qc: {0:.2E} +- {1:.2E}\n'.format(p[1], p_err[1])
-        result += '    f0: {0:.2E} +- {1:.2E} GHz\n'.format(p[2], p_err[2])
-        result += '    phi: {0:.2E} +- {1:.2E} deg\n'.format(p[3], p_err[3])
-        result += '    background_db: {0:.2E} +- {1:.2E} dB\n'.format(p[4], p_err[4])
-        result += '    background_phase: {0:.2E} +- {1:.2E} deg\n'.format(p[5], p_err[5])
-        result += '    phase_delay: {0:.2E} +- {1:.2E} deg'.format(p[6], p_err[6])
+        if weight is None:
+            weight = np.ones(len(self.x)*2)
 
-        return result
+        y_model, z_model = self.model_s21(p, self.x, style='inverse')
 
+        y_error = self.y - y_model
+        z_error = self.z - z_model
 
+        residual = np.concatenate((y_error, z_error))
 
-    def plot_db_fit(self, p, x, y, z, grid=False):
-
-        x_data = np.linspace(x[0], x[-1], 1e4)
-        y_model, z_model = self.model(p, x_data, style='db')
+        return  residual/weight
 
 
-        fig, (ax1, ax2) = plt.subplots(2, 1, sharex=True)
+
+################################################################################
+#
+#
+#                   Fit
+#
+#
+################################################################################
+
+
+
+    def fit_phase_shift_electronic_delay(self, p, weight=None):
+
+        self.result = lmfit.minimize(self.residual_phase_shift_electronic_delay, p, args=(weight))
+
+        return self.result
+
+
+
+
+    def fit_inverse_circle(self, p, weight=None):
+
+        self.result = lmfit.minimize(self.residual_inverse_circle, p, args=(weight))
+
+        return self.result
+
+
+
+################################################################################
+#
+#
+#                   Plot
+#
+#
+################################################################################
+
+
+
+    def plot_phase_shift_electronic_delay(self, title, file_name,
+                                          file_format='png', grid=True):
 
         # Obtain the frequency data in a good format (usually GHz)
-        f_data, f_unit = self._parse_number(x)
-
-
-        ax1.plot(f_data, y, '.')
-        ax1.plot(x_data/1e9, y_model)
-
-        ax2.plot(f_data, z, '.')
-        ax2.plot(x_data/1e9, z_model)
-
-        ax2.set_xlabel('Frequency '+f_unit+'Hz')
-        ax2.set_ylabel('Phase [rad]')
-
-        ax1.set_ylabel('Attenuation [dB]')
-
-        # Display grid or not
-        if grid:
-            for ax in fig.get_axes():
-                ax.grid()
-
-        fig.suptitle('S21')
-        plt.show()
-
-
-
-
-    def plot_inverse_circle_fit(self, p, x, y, z, grid=False):
-
-        x_data = np.linspace(x[0], x[-1], 1e4)
-        y_model, z_model = self.model(p, x_data, style='inverse')
-
+        f_data, f_unit = self._parse_number(self.x)
 
         fig, ax = plt.subplots(1, 1)
 
+        ax.plot(f_data, self.y, '.-')
+        ax.plot(f_data, self.model_phase_shift_electronic_delay(self.result.params, self.x))
 
-        ax.plot(y, z, '.')
-        ax.plot(y_model, z_model, '.-')
+        ax.set_xlabel('Frequency '+f_unit+'Hz')
+        ax.set_ylabel('Unwrap phase [rad]')
 
-        ax.set_xlabel('Re[1/S21]')
-        ax.set_ylabel('Im[1/S21]')
-
-        # Display grid or not
         if grid:
-            ax.grid()
+            ax.grid(which='both')
 
-        fig.suptitle('S21')
-        plt.show()
+        textstr = u'phase shift={0:.2E}rad, σ={1:.2E}rad\n'\
+                  u'electronic delay={2:.2E}ns, σ={3:.2E}ns\n'\
+                  .format(self.result.params['phase_shift'].value,
+                          self.result.params['phase_shift'].stderr,
+                          self.result.params['electronic_delay'].value,
+                          self.result.params['electronic_delay'].stderr)
+
+        props = dict(boxstyle='round', facecolor='white', alpha=1.)
+        ax.text(0.25, 1., textstr, transform=ax.transAxes, fontsize=14,
+                verticalalignment='top', bbox=props)
+
+        fig.suptitle(title)
+
+        plt.savefig('{0}.{1}'.format(file_name, file_format))
+        plt.close(fig)
+
+
+
+    def plot_inverse_circle(self, title, file_name,
+                                          file_format='png', grid=True):
+
+
+        y_model, z_model = self.model_s21(self.result.params, self.x, style='inverse')
+
+        fig, ax = plt.subplots(1, 1)
+
+        ax.plot(self.y, self.z, '.-')
+
+
+        ax.plot(y_model, z_model, '-')
+
+        ax.set_xlabel('Re(1/s21)')
+        ax.set_ylabel('Im(1/s21)')
+
+        if grid:
+            ax.grid(which='both')
+
+        textstr = u'Qi={0:.2E}, σ={1:.2E}\n'\
+                  u'Qc={2:.2E}, σ={3:.2E}\n'\
+                  u'f0={4:.2E}, σ={5:.2E}\n'\
+                  u'phi={6:.2E}, σ={7:.2E}'\
+                  .format(self.result.params['qi'].value,
+                          self.result.params['qi'].stderr,
+                          self.result.params['qc'].value,
+                          self.result.params['qc'].stderr,
+                          self.result.params['f0'].value,
+                          self.result.params['f0'].stderr,
+                          self.result.params['phi'].value,
+                          self.result.params['phi'].stderr)
+
+        props = dict(boxstyle='round', facecolor='white', alpha=1.)
+        ax.text(0.67, 1.1, textstr, transform=ax.transAxes, fontsize=14,
+                verticalalignment='top', bbox=props)
+
+        fig.suptitle(title)
+
+        plt.savefig('{0}.{1}'.format(file_name, file_format))
+        plt.close(fig)
+
+
+
+    def plot_s21_conf_interval2d(self, a, b, title, file_name,
+                                 a_nb_point=50, b_nb_point=50,
+                                 cmap=plt.cm.jet, file_format='png',
+                                 grid=True):
+
+
+        mini = lmfit.Minimizer(self.residual_inverse_circle, self.result.params)
+
+        fig, ax = plt.subplots(1, 1)
+
+        cx, cy, data_grid = lmfit.conf_interval2d(mini, self.result,
+                                             a.lower(), b.lower(),
+                                             a_nb_point, b_nb_point)
+
+        cax = plt.imshow(data_grid,
+                         interpolation='none',
+                         origin='bottom',
+                         extent=[cx[0], cx[-1], cy[0], cy[-1]],
+                         aspect='auto',
+                         cmap=cmap)
+
+        cb = fig.colorbar(cax)
+        cb.solids.set_rasterized(True)
+        cb.solids.set_edgecolor('face')
+        cb.set_label('Probability')
+
+        ax.set_ylabel(b)
+        ax.set_xlabel(a)
+
+        ax.ticklabel_format(style='scientific', scilimits=(0,0))
+
+        if grid:
+            ax.grid(which='both', color='w')
+
+        fig.suptitle(title)
+
+        plt.savefig('{0}.{1}'.format(file_name, file_format))
+        plt.close(fig)
+
+
+
+################################################################################
+#
+#
+#                   Model
+#
+#
+################################################################################
+
+
+    def get_pearsonr(self, x, y):
+
+        return pearsonr(x, y)[0]
