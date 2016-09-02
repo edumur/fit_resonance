@@ -27,7 +27,7 @@ from scipy.stats import pearsonr
 
 from plot import plot
 
-class fit(plot):
+class Fit(plot):
 
 
 
