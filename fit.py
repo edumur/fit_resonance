@@ -23,6 +23,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from scipy.optimize import leastsq, minimize
 import lmfit
+from lmfit import Parameters
 from scipy.stats import pearsonr
 
 from plot import plot
