@@ -198,7 +198,7 @@ class fit(plot):
 
 
     def plot_phase_shift_electronic_delay(self, title, file_name,
-                                          file_format='png', grid=True):
+                                          file_format='png', grid=True, show=False):
 
         # Obtain the frequency data in a good format (usually GHz)
         f_data, f_unit = self._parse_number(self.x)
@@ -227,13 +227,16 @@ class fit(plot):
 
         fig.suptitle(title)
 
-        plt.savefig('{0}.{1}'.format(file_name, file_format))
-        plt.close(fig)
+        if show:
+            plt.show()
+        else:
+            plt.savefig('{0}.{1}'.format(file_name, file_format))
+            plt.close(fig)
 
 
 
     def plot_inverse_circle(self, title, file_name,
-                                          file_format='png', grid=True):
+                            file_format='png', grid=True, show=False):
 
 
         y_model, z_model = self.model_s21(self.result.params, self.x, style='inverse')
@@ -270,15 +273,18 @@ class fit(plot):
 
         fig.suptitle(title)
 
-        plt.savefig('{0}.{1}'.format(file_name, file_format))
-        plt.close(fig)
+        if show:
+            plt.show()
+        else:
+            plt.savefig('{0}.{1}'.format(file_name, file_format))
+            plt.close(fig)
 
 
 
     def plot_s21_conf_interval2d(self, a, b, title, file_name,
                                  a_nb_point=50, b_nb_point=50,
                                  cmap=plt.cm.jet, file_format='png',
-                                 grid=True):
+                                 grid=True, show=False):
 
 
         mini = lmfit.Minimizer(self.residual_inverse_circle, self.result.params)
@@ -311,8 +317,11 @@ class fit(plot):
 
         fig.suptitle(title)
 
-        plt.savefig('{0}.{1}'.format(file_name, file_format))
-        plt.close(fig)
+        if show:
+            plt.show()
+        else:
+            plt.savefig('{0}.{1}'.format(file_name, file_format))
+            plt.close(fig)
 
 
 
