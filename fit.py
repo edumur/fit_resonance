@@ -21,6 +21,7 @@
 
 import numpy as np
 import matplotlib.pyplot as plt
+import scipy.constants as cst
 from scipy.optimize import leastsq, minimize
 import lmfit
 from lmfit import Parameters
@@ -354,3 +355,35 @@ class Fit(plot):
     def get_pearsonr(self, x, y):
 
         return pearsonr(x, y)[0]
+
+
+
+    def power2photon_number(self, power, qi=None, qc=None, f0=None):
+        """
+        Calculate the average photon number in a microwave resonator.
+
+        Parameters
+        ----------
+        power : float
+            Input power at the entrance of the resonator in watt.
+        qi : float
+            Internal quality factor.
+            If None the result of inverse circle fit is used.
+        qc : float
+            coupling quality factor.
+            If None the result of inverse circle fit is used.
+        f0 : float
+            Resonance frequency in hertz.
+            If None the result of inverse circle fit is used.
+
+        Return
+        ----------
+        average photon number : float
+        """
+
+        if qi is None and qc is None and f0 is None:
+            qi = self.result.params['qi'].value
+            qc = self.result.params['qc'].value
+            f0 = self.result.params['f0'].value
+
+        return qc/o0*(qi/(qi + qc))**2.*power/cst.h/f0
