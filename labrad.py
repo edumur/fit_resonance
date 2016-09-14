@@ -73,6 +73,8 @@ class labrad(tools):
         # Get file whose the name corresponds to the file number
         f = [f for f in files if self._file_number == int(f.split('-')[0])]
 
+        if len(f) < 1:
+            raise ValueError('Your file_number is incorrect, no file found.')
         return f[0]
 
 
@@ -111,17 +113,28 @@ class labrad(tools):
         """
 
         s = ConfigParser()
-
+        print self._full_name[:-3]+'ini'
         s.read(os.path.join(os.getcwd(), self._full_name[:-3]+'ini'))
+        print s.sections()
 
+        # If the file is 1d
         self._frequency_unit = s.get('Independent 1', 'units').lower()
 
         self._parameters = {'s11', 's12', 's21', 's22'}
         self._units = []
         self._measured = []
 
+        # Attribut which will contain the number dimension of the measurement
+        self.dimension = 0
+
         # We browse all sections and options of the file
         for section in s.sections():
+            # We select only the Independent sections
+            if section.split()[0] == 'Independent':
+                # if s.get(section, 'label')
+
+                self.dimension += 1
+
             # We select only the Dependent sections
             if section.split()[0] == 'Dependent':
                 # We browse all the options
