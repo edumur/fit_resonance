@@ -31,17 +31,23 @@ class labrad(tools):
 
 
 
-    def __init__(self, full_name):
+    def __init__(self, file_number, folder=None):
         """
         Initialize the class by reading all the information in the labrad file.
 
         Parameters
         ----------
-        full_name : str
-            Full path of the file.
+        file_number : int
+            The number being at the beginning of the file.
+        folder : str {None}
+            If precised the folder in which the file is.
+            If None the folder of the main script is used
         """
 
-        self._full_name = full_name
+        self._folder = folder
+        self._file_number = file_number
+
+        self._full_name = self._get_full_name()
 
         self._frequency_unit = None
 
@@ -50,6 +56,24 @@ class labrad(tools):
 
         #We get data and store them into private attribute
         self._get_data()
+
+
+    def _get_full_name(self):
+
+        if self._folder is None:
+            folder = os.getcwd()
+        else:
+            folder = self._folder
+        # Get files in the directory
+        files = [f for f in os.listdir(folder) if os.path.isfile(os.path.join(folder, f))]
+
+        # Get files whose the extension is csv
+        files = [f for f in files if 'csv' == f.split('.')[-1]]
+
+        # Get file whose the name corresponds to the file number
+        f = [f for f in files if self._file_number == int(f.split('-')[0])]
+
+        return f[0]
 
 
 
