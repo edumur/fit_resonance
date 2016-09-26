@@ -11,7 +11,7 @@ from fit import Fit, Parameters
 ################
 
 dat = pd.read_csv('dat.csv', header=None).get_values().transpose()
-f = dat[0]
+f = dat[0] #In GHz
 s21 = 10.**(dat[3]/20.)*np.exp(1j*dat[7])
 
 ################
@@ -88,7 +88,7 @@ p.add_many(('qi',  3e5,        True,   0., None,  None),
            ('phi', -0.5,       True, None, None,  None))
 
 # Remove background, phase shift and electronic delay
-s21 *= 10**(background/20.)\
+s21 *= 10**(-background/20.)\
        *np.exp(1j*(2.*np.pi*f*1e9*electronic_delay + phase_shift))
 
 re = np.real(1./s21)
