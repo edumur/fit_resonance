@@ -173,7 +173,6 @@ class labrad(tools):
                     elif option == 'category':
                         self._measured.append(s.get(section, option).lower())
 
-        print self._sweeped_labels
         self._frequency_unit = self._sweeped_units[self._sweeped_labels.index('frequency')]
 
         self._unit_mag = self._units[0]
