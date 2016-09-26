@@ -234,7 +234,7 @@ class labrad(tools):
         # Depending on the file format and the asked format we get data
         if self._unit_mag == 'ma' and data_format.lower() == 'db':
 
-            a = self.ma2db(d[m]),
+            a = self.ma2db(d[m])
             b = d[m+4]
 
         elif self._unit_mag == 'db' and data_format.lower() == 'ma':
@@ -246,7 +246,7 @@ class labrad(tools):
 
             if self._unit_phase == 'rad':
 
-                a = np.cos(d[m+4])*self.db2ma(d[m]),
+                a = np.cos(d[m+4])*self.db2ma(d[m])
                 b = np.sin(d[m+4])*self.db2ma(d[m])
             else:
 
@@ -257,26 +257,26 @@ class labrad(tools):
 
             if self._unit_phase == 'rad':
 
-                a = np.cos(d[m+4])*d[m],
+                a = np.cos(d[m+4])*d[m]
                 b = np.sin(d[m+4])*d[m]
 
             else:
 
-                a = np.cos(np.radians(d[m+4]))*d[m],
+                a = np.cos(np.radians(d[m+4]))*d[m]
                 b = np.sin(np.radians(d[m+4]))*d[m]
 
         elif self._unit_mag == 'ri' and data_format.lower() == 'ma':
 
-            a = np.sqrt(d[m]**2 + d[m+4]**2),
+            a = np.sqrt(d[m]**2 + d[m+4]**2)
             b = np.degrees(np.angle(d[m] + 1j*d[m+4]))
 
         elif self._unit_mag == 'ri' and data_format.lower() == 'db':
 
-            a = self.ma2db(np.sqrt(d[m]**2 + d[m+4]**2)),
+            a = self.ma2db(np.sqrt(d[m]**2 + d[m+4]**2))
             b = np.degrees(np.angle(d[m] + 1j*d[m+4]))
 
         else:
-            a = d[m],
+            a = d[m]
             b = d[m+4]
 
         # Depending of the number of dimensions we return data
