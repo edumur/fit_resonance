@@ -384,6 +384,6 @@ class Fit(plot):
         if qi is None and qc is None and f0 is None:
             qi = self.result.params['qi'].value
             qc = self.result.params['qc'].value
-            f0 = self.result.params['f0'].value
+            o0 = self.result.params['f0'].value*2.*np.pi
 
-        return qc/o0*(qi/(qi + qc))**2.*power/cst.h/f0
+        return qc/o0*(qi/(qi + qc))**2.*power/cst.hbar/o0
