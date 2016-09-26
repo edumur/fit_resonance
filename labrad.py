@@ -135,7 +135,12 @@ class labrad(tools):
 
         s = ConfigParser()
 
-        s.read(os.path.join(os.getcwd(), self._full_name[:-3]+'ini'))
+        if self._folder is None:
+            folder = os.getcwd()
+        else:
+            folder = self._folder
+
+        s.read(os.path.join(folder, self._full_name[:-3]+'ini'))
 
         # Contain information on the sweeped parameters
         self._sweeped_labels = []
@@ -168,7 +173,7 @@ class labrad(tools):
                     elif option == 'category':
                         self._measured.append(s.get(section, option).lower())
 
-
+        print self._sweeped_labels
         self._frequency_unit = self._sweeped_units[self._sweeped_labels.index('frequency')]
 
         self._unit_mag = self._units[0]
@@ -181,7 +186,15 @@ class labrad(tools):
         Extract data from the s2p file and format them in a ndarray
         """
 
-        self._data = pd.read_csv(self._full_name, header=None).get_values().transpose()
+        if self._folder is None:
+            folder = os.getcwd()
+        else:
+            folder = self._folder
+
+        os.path.join(folder, self._full_name[:-3]+'ini')
+
+        self._data = pd.read_csv(os.path.join(folder, self._full_name),
+                                 header=None).get_values().transpose()
 
 
 
