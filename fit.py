@@ -216,8 +216,8 @@ class Fit(plot):
         if grid:
             ax.grid(which='both')
 
-        textstr = u'phase shift={0:.2E}rad, σ={1:.2E}rad\n'\
-                  u'electronic delay={2:.2E}ns, σ={3:.2E}ns\n'\
+        textstr = u'phase shift={0:.2E}rad, std={1:.2E}rad\n'\
+                  u'electronic delay={2:.2E}ns, std={3:.2E}ns\n'\
                   .format(self.result.params['phase_shift'].value,
                           self.result.params['phase_shift'].stderr,
                           self.result.params['electronic_delay'].value,
@@ -256,10 +256,10 @@ class Fit(plot):
         if grid:
             ax.grid(which='both')
 
-        textstr = u'Qi={0:.2E}, σ={1:.2E}\n'\
-                  u'Qc={2:.2E}, σ={3:.2E}\n'\
-                  u'f0={4:.2E}, σ={5:.2E}\n'\
-                  u'phi={6:.2E}, σ={7:.2E}'\
+        textstr = u'Qi={0:.2E}, std={1:.2E}\n'\
+                  u'Qc={2:.2E}, std={3:.2E}\n'\
+                  u'f0={4:.2E}, std={5:.2E}\n'\
+                  u'phi={6:.2E}, std={7:.2E}'\
                   .format(self.result.params['qi'].value,
                           self.result.params['qi'].stderr,
                           self.result.params['qc'].value,
@@ -270,7 +270,7 @@ class Fit(plot):
                           self.result.params['phi'].stderr)
 
         props = dict(boxstyle='round', facecolor='white', alpha=1.)
-        ax.text(0.67, 1.1, textstr, transform=ax.transAxes, fontsize=14,
+        ax.text(0.625, 1.1, textstr, transform=ax.transAxes, fontsize=14,
                 verticalalignment='top', bbox=props)
 
         fig.suptitle(title)
