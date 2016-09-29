@@ -25,9 +25,9 @@ import os
 from ConfigParser import ConfigParser, SafeConfigParser
 
 
-from tools import tools
+from tools import Tools
 
-class labrad(tools):
+class Labrad(Tools):
 
 
 

@@ -1,7 +1,5 @@
 # This Python file uses the following encoding: utf-8
 
-# s2p readout file
-
 # Copyright (C) 2016 Dumur Étienne
 # etienne.dumur@gmail.com
 
@@ -22,14 +20,13 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import scipy.constants as cst
-from scipy.optimize import leastsq, minimize
 import lmfit
 from lmfit import Parameters
 from scipy.stats import pearsonr
 
-from plot import plot
+from tools import Tools
 
-class Fit(plot):
+class FitSuperconductingResonance(Tools):
 
 
 

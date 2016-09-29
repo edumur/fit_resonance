@@ -20,7 +20,7 @@
 import numpy as np
 
 
-class tools(object):
+class Tools(object):
 
 
     def __init__(self):

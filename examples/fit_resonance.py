@@ -2,9 +2,10 @@ import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
 import sys
-sys.path.append('../../microwave_resonator_fit/')
+sys.path.append('../../fit_resonance/')
 
-from fit import Fit, Parameters
+from fit_superconducting_resonance import FitSuperconductingResonance as Fit
+from fit_superconducting_resonance import Parameters
 
 ################
 #    Data import

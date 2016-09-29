@@ -21,13 +21,13 @@ import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.widgets import CheckButtons, RadioButtons
 
-from s2p import s2p
-from labrad import labrad
-from tools import tools
+from s2p import S2p
+from labrad import Labrad
+from tools import Tools
 
 
 
-class plot(tools):
+class Plot(Tools):
 
 
     def __init__(self, full_name):

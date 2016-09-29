@@ -22,9 +22,9 @@
 import numpy as np
 import pandas as pd
 
-from tools import tools
+from tools import Tools
 
-class s2p(tools):
+class S2p(Tools):
 
 
 
