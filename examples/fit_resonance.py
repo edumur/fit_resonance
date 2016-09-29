@@ -114,3 +114,7 @@ fm.plot_inverse_circle(title='Nice inverse fit',
                        file_name='fit_inverse_circle',
                        file_format='svg',
                        grid=True)
+fm.plot_zoom_in_inverse_circle(title='Nice inverse fit zoom in origin',
+                               file_name='fit_zoom_in_inverse_circle',
+                               file_format='svg',
+                               grid=True)
