@@ -235,7 +235,8 @@ class FitSuperconductingResonance(Tools):
 
 
     def plot_inverse_circle(self, title, file_name,
-                            file_format='png', grid=True, show=False):
+                            file_format='png', grid=True, show=False,
+                            zoom_in=False):
 
 
         y_model, z_model = self.model_s21(self.result.params, self.x, style='inverse')
@@ -272,54 +273,9 @@ class FitSuperconductingResonance(Tools):
 
         fig.suptitle(title)
 
-        if show:
-            plt.show()
-        else:
-            plt.savefig('{0}.{1}'.format(file_name, file_format))
-            plt.close(fig)
-
-
-
-    def plot_zoom_in_inverse_circle(self, title, file_name, file_format='png',
-                                          grid=True, show=False):
-
-
-        y_model, z_model = self.model_s21(self.result.params, self.x, style='inverse')
-
-        fig, ax = plt.subplots(1, 1)
-
-        ax.plot(self.y, self.z, '.-')
-
-
-        ax.plot(y_model, z_model, '-')
-
-        ax.set_xlabel('Re(1/s21)')
-        ax.set_ylabel('Im(1/s21)')
-
-        if grid:
-            ax.grid(which='both')
-
-        textstr = u'Qi={0:.2E}, std={1:.2E}\n'\
-                  u'Qc={2:.2E}, std={3:.2E}\n'\
-                  u'f0={4:.2E}, std={5:.2E}\n'\
-                  u'phi={6:.2E}, std={7:.2E}'\
-                  .format(self.result.params['qi'].value,
-                          self.result.params['qi'].stderr,
-                          self.result.params['qc'].value,
-                          self.result.params['qc'].stderr,
-                          self.result.params['f0'].value,
-                          self.result.params['f0'].stderr,
-                          self.result.params['phi'].value,
-                          self.result.params['phi'].stderr)
-
-        props = dict(boxstyle='round', facecolor='white', alpha=1.)
-        ax.text(0.625, 1.1, textstr, transform=ax.transAxes, fontsize=14,
-                verticalalignment='top', bbox=props)
-
-        fig.suptitle(title)
-
-        ax.set_xlim(0., 2.)
-        ax.set_ylim(-1., 1.)
+        if zoom_in:
+            ax.set_xlim(0., 2.)
+            ax.set_ylim(-1., 1.)
 
         if show:
             plt.show()
