@@ -78,14 +78,15 @@ class FitSawResonator(Tools):
 
     def model_s21(self, p, x, style='db', phase='rad'):
 
-        p = p.valuesdict()
-        qi = p['qi']
-        qc = p['qc']
+        p   = p.valuesdict()
+        qi  = p['qi']
+        qc  = p['qc']
         qc2 = p['qc2']
-        f0 = p['f0']
+        f0  = p['f0']
 
         d = (x - f0)/f0
-        y = (d - 1j/2./qi)/(d - 1j*(d/2./qc2 + 1./2./qc))
+        y = (-d + 1j/2./qi)/(1./4./qi/qc2 - d\
+             + 1j*(d/2./qc2 + 1./2./qc + 1./2./qi))
 
         if style.lower() == 'db':
 
@@ -251,7 +252,8 @@ class FitSawResonator(Tools):
 
 
     def plot_inverse_circle(self, title, file_name,
-                            file_format='png', grid=True, show=False):
+                            file_format='png', grid=True, show=False,
+                            zoom_in=False):
 
 
         y_model, z_model = self.model_s21(self.result.params, self.x, style='inverse')
@@ -287,6 +289,10 @@ class FitSawResonator(Tools):
                 verticalalignment='top', bbox=props)
 
         fig.suptitle(title)
+
+        if zoom_in:
+            ax.set_xlim(0., 2.)
+            ax.set_ylim(-1., 1.)
 
         if show:
             plt.show()
@@ -383,7 +389,10 @@ class FitSawResonator(Tools):
             Internal quality factor.
             If None the result of inverse circle fit is used.
         qc : float
-            coupling quality factor.
+            Coupling quality factor.
+            If None the result of inverse circle fit is used.
+        qc2 : float
+            Second coupling quality factor.
             If None the result of inverse circle fit is used.
         f0 : float
             Resonance frequency in hertz.
@@ -397,16 +406,16 @@ class FitSawResonator(Tools):
         if qi is None and qc is None and qc2 is None and f0 is None:
             qi = self.result.params['qi'].value
             qc = self.result.params['qc'].value
+            qc2 = self.result.params['qc2'].value
             o0 = self.result.params['f0'].value*2.*np.pi
 
-        return power/cst.hbar/o0**2.*qc*(qi/qc - 1.)**2.
+        return power/cst.hbar/o0**2.*qc*((1./2./qc2)**2. + (qi/qc)**2.)
 
 
 
-    def get_L(self, qi=None, qc=None, qc2=None, f0=None, z0=50.):
+    def get_L(self, qc=None, qc2=None, f0=None, z0=50.):
 
-        if qi is None and qc is None and qc2 is None and f0 is None:
-            qi  = self.result.params['qi'].value
+        if qc is None and qc2 is None and f0 is None:
             qc  = self.result.params['qc'].value
             qc2 = self.result.params['qc2'].value
             o0  = self.result.params['f0'].value*2.*np.pi
@@ -415,22 +424,20 @@ class FitSawResonator(Tools):
 
 
 
-    def get_R(self, qi=None, qc=None, qc2=None, f0=None, z0=50.):
+    def get_R(self, qi=None, qc=None, qc2=None, z0=50.):
 
-        if qi is None and qc is None and qc2 is None and f0 is None:
+        if qi is None and qc is None and qc2 is None:
             qi  = self.result.params['qi'].value
             qc  = self.result.params['qc'].value
             qc2 = self.result.params['qc2'].value
-            o0  = self.result.params['f0'].value*2.*np.pi
 
         return z0/2./qi/qc2**2.*np.sqrt(qc*(qc + 2.*qc2))
 
 
 
-    def get_C(self, qi=None, qc=None, qc2=None, f0=None, z0=50.):
+    def get_C(self, qc=None, qc2=None, f0=None, z0=50.):
 
-        if qi is None and qc is None and qc2 is None and f0 is None:
-            qi  = self.result.params['qi'].value
+        if qc is None and qc2 is None and f0 is None:
             qc  = self.result.params['qc'].value
             qc2 = self.result.params['qc2'].value
             o0  = self.result.params['f0'].value*2.*np.pi
@@ -439,11 +446,9 @@ class FitSawResonator(Tools):
 
 
 
-    def get_C0(self, qi=None, qc=None, qc2=None, f0=None, z0=50.):
+    def get_C0(self, qc2=None, f0=None, z0=50.):
 
-        if qi is None and qc is None and qc2 is None and f0 is None:
-            qi  = self.result.params['qi'].value
-            qc  = self.result.params['qc'].value
+        if qc2 is None and f0 is None:
             qc2 = self.result.params['qc2'].value
             o0  = self.result.params['f0'].value*2.*np.pi
 
